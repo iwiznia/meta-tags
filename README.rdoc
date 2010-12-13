@@ -137,6 +137,14 @@ Also you could use +set_meta_tags+ method to define all meta tags simultaneously
 
 You can find allowed options for +set_meta_tags+ method below.
 
+I've also added the method: append_meta_tags that does exactly the same, but allow you to append instead of overwrite previous meta information. For example you could do:
+append_meta_tags({:keywords => ["generic", "keywords"], :description => "generic description for site"})
+And then in another part of the code:
+append_meta_tags({:keywords => ["specific"], :description => "specific description for action"})
+
+What you would get is the keywords combined and the description too (using the :separator defined)
+
+
 === Using MetaTags in view
 
 To set meta tags you can use following methods:
@@ -159,6 +167,8 @@ somewhere on the page:
 If you want to set the title and display another text, use this:
 
   <h1><%= title 'Member Login', 'Here you can login to the site:' %></h1>
+
+All the view methods also have as the last param a boolean, you have to send true to append and false (default) to replace.
 
 === Allowed options for +display_meta_tags+ and +set_meta_tags+ methods
 
