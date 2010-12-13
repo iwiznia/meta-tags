@@ -28,12 +28,23 @@ module MetaTags
         render_without_meta_tags(*args, &block)
       end
 
-      # Set meta tags for the page.
-      #
-      # See <tt>MetaTags.set_meta_tags</tt> for details.
-      def set_meta_tags(meta_tags)
+      def set_meta_tags(meta_tags = {}, append = false)
         @meta_tags ||= {}
-        @meta_tags.merge!(meta_tags || {})
+        if !append
+          @meta_tags.merge!(meta_tags || {})
+        else
+          append_meta_tags(meta_tags)
+        end
+      end
+
+      def append_meta_tags(meta_tags = {})
+        @meta_tags ||= {}
+        meta_tags.each do |tag, value|
+          @meta_tags[tag] ||= []
+
+          @meta_tags[tag] = [@meta_tags[tag]] if(@meta_tags[tag].is_a?(String))
+          @meta_tags[tag] += [*value]
+        end
       end
 
       protected :set_meta_tags

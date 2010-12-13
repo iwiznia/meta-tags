@@ -13,6 +13,7 @@ module MetaTags
     #
     # @param [Hash] meta_tags list of meta tags. See {#display_meta_tags}
     #   for allowed options.
+    # @param [Boolean] append If you are appending set this to true (Default: false)
     #
     # @example
     #   set_meta_tags :title => 'Login Page', :description => 'Here you can login'
@@ -20,9 +21,23 @@ module MetaTags
     #
     # @see #display_meta_tags
     #
-    def set_meta_tags(meta_tags = {})
+    def set_meta_tags(meta_tags = {}, append = false)
       @meta_tags ||= {}
-      @meta_tags.merge!(meta_tags || {})
+      if !append
+        @meta_tags.merge!(meta_tags || {})
+      else
+        append_meta_tags(meta_tags)
+      end
+    end
+
+    def append_meta_tags(meta_tags = {})
+      @meta_tags ||= {}
+      meta_tags.each do |tag, value|
+        @meta_tags[tag] ||= []
+
+        @meta_tags[tag] = [@meta_tags[tag]] if(@meta_tags[tag].is_a?(String))
+        @meta_tags[tag] += [*value]
+      end
     end
 
     # Set the page title and return it back.
@@ -47,8 +62,8 @@ module MetaTags
     #
     # @see #display_meta_tags
     #
-    def title(title, headline = '')
-      set_meta_tags(:title => title)
+    def title(title, headline = '', append = false)
+      set_meta_tags({:title => title}, append)
       headline.blank? ? title : headline
     end
 
@@ -64,14 +79,14 @@ module MetaTags
     #
     # @see #display_meta_tags
     #
-    def keywords(keywords)
-      set_meta_tags(:keywords => keywords)
+    def keywords(keywords, append = false)
+      set_meta_tags({:keywords => keywords}, append)
       keywords
     end
 
     # Set the page description.
     #
-    # @param [String] page description to be set in HEAD section of
+    # @param [String, Array] page description to be set in HEAD section of
     #   the HTML document. Please note, any HTML tags will be stripped
     #   from output string, and string will be truncated to 200
     #   characters.
@@ -82,8 +97,8 @@ module MetaTags
     #
     # @see #display_meta_tags
     #
-    def description(description)
-      set_meta_tags(:description => description)
+    def description(description, append = false)
+      set_meta_tags({:description => description}, append)
       description
     end
 
@@ -98,8 +113,8 @@ module MetaTags
     #
     # @see #display_meta_tags
     #
-    def noindex(noindex)
-      set_meta_tags(:noindex => noindex)
+    def noindex(noindex, append = false)
+      set_meta_tags({:noindex => (String === noindex ? noindex : 'robots')}, append)
       noindex
     end
 
@@ -114,8 +129,8 @@ module MetaTags
     #
     # @see #display_meta_tags
     #
-    def nofollow(nofollow)
-      set_meta_tags(:nofollow => nofollow)
+    def nofollow(nofollow, append = false)
+      set_meta_tags({:nofollow => (String === nofollow ? nofollow : 'robots')}, append)
       nofollow
     end
 
@@ -174,7 +189,7 @@ module MetaTags
       end
 
       # description
-      description = normalize_description(meta_tags[:description])
+      description = normalize_description(meta_tags[:description], separator)
       result << tag(:meta, :name => :description, :content => description) unless description.blank?
 
       # keywords
@@ -182,19 +197,19 @@ module MetaTags
       result << tag(:meta, :name => :keywords, :content => keywords) unless keywords.blank?
 
       # noindex & nofollow
-      noindex_name  = String === meta_tags[:noindex]  ? meta_tags[:noindex]  : 'robots'
-      nofollow_name = String === meta_tags[:nofollow] ? meta_tags[:nofollow] : 'robots'
-
-      if noindex_name == nofollow_name
-        content = [meta_tags[:noindex] && 'noindex', meta_tags[:nofollow] && 'nofollow'].compact.join(', ')
-        result << tag(:meta, :name => noindex_name, :content => content) unless content.blank?
-      else
-        result << tag(:meta, :name => noindex_name,  :content => 'noindex')  if meta_tags[:noindex]
-        result << tag(:meta, :name => nofollow_name, :content => 'nofollow') if meta_tags[:nofollow]
+      meta_tags[:noindex] = [*meta_tags[:noindex]]
+      meta_tags[:nofollow] = [*meta_tags[:noindex]]
+      meta_tags[:noindex].each do |no_index|
+        nofollow = meta_tags[:nofollow].include?(no_index) ? ", nofollow" : ""
+        result << tag(:meta, :name => no_index, :content => "noindex" + nofollow)
+      end
+      meta_tags[:nofollow].each do |no_follow|
+        nofollow = !(meta_tags[:noindex].include?(no_follow))
+        result << tag(:meta, :name => no_follow, :content => "nofollow") if nofollow
       end
 
       # canonical
-      result << tag(:link, :rel => :canonical, :href => meta_tags[:canonical]) unless meta_tags[:canonical].blank?
+      result << tag(:link, :rel => :canonical, :href => [*meta_tags[:canonical]].join) unless meta_tags[:canonical].blank?
 
       result = result.join("\n")
       result.respond_to?(:html_safe) ? result.html_safe : result
@@ -206,9 +221,9 @@ module MetaTags
         [*title].map { |t| h(strip_tags(t)) }
       end
 
-      def normalize_description(description)
+      def normalize_description(description, separator)
         return '' unless description
-        truncate(strip_tags(description).gsub(/\s+/, ' '), :length => 200)
+        truncate(strip_tags([*description].join(separator)).gsub(/\s+/, ' '), :length => 200)
       end
 
       def normalize_keywords(keywords)
