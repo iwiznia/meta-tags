@@ -197,8 +197,8 @@ module MetaTags
       result << tag(:meta, :name => :keywords, :content => keywords) unless keywords.blank?
 
       # noindex & nofollow
-      meta_tags[:noindex] = [*meta_tags[:noindex]]
-      meta_tags[:nofollow] = [*meta_tags[:noindex]]
+      meta_tags[:noindex] = [*meta_tags[:noindex]].compact
+      meta_tags[:nofollow] = [*meta_tags[:nofollow]].compact
       meta_tags[:noindex].each do |no_index|
         nofollow = meta_tags[:nofollow].include?(no_index) ? ", nofollow" : ""
         result << tag(:meta, :name => no_index, :content => "noindex" + nofollow)
