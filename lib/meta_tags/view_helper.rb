@@ -104,7 +104,7 @@ module MetaTags
 
     # Set the noindex meta tag
     #
-    # @param [Boolean, String] noindex a noindex value.
+    # @param [Boolean, String, Array] noindex a noindex value.
     # @return [Boolean, String] passed value.
     #
     # @example
@@ -114,7 +114,7 @@ module MetaTags
     # @see #display_meta_tags
     #
     def noindex(noindex, append = false)
-      set_meta_tags({:noindex => (String === noindex ? noindex : 'robots')}, append)
+      set_meta_tags({:noindex => (Boolean === noindex ? 'robots' : noindex)}, append)
       noindex
     end
 
@@ -130,7 +130,7 @@ module MetaTags
     # @see #display_meta_tags
     #
     def nofollow(nofollow, append = false)
-      set_meta_tags({:nofollow => (String === nofollow ? nofollow : 'robots')}, append)
+      set_meta_tags({:nofollow => (Boolean === nofollow ? 'robots' : nofollow)}, append)
       nofollow
     end
 
