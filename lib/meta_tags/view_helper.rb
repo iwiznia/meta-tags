@@ -134,6 +134,19 @@ module MetaTags
       nofollow
     end
 
+    def set_metas_from_yaml
+      @meta_vars ||= {}
+      @meta_vars.reject! do |k, v| v.nil? end
+
+      path = ['metas'] + params[:controller].split('/') + [params[:action]]
+      metas = get_most_specific_metas(path)
+
+      title(get_appropiate_translation(metas[:title]), @meta_vars) if !@meta_tags[:title]
+      description(get_appropiate_translation(metas[:description]), @meta_vars) if !@meta_tags[:description]
+      keywords(get_appropiate_translation(metas[:keywords]), @meta_vars) if !@meta_tags[:keywords]
+    end
+
+
     # Set default meta tag values and display meta tags. This method
     # should be used in layout file.
     #
@@ -159,6 +172,8 @@ module MetaTags
     #   </head>
     #
     def display_meta_tags(default = {})
+      set_metas_from_yaml
+
       meta_tags = (default || {}).merge(@meta_tags || {})
 
       # Prefix (leading space)
@@ -171,7 +186,7 @@ module MetaTags
       suffix = meta_tags[:suffix] === false ? '' : (meta_tags[:suffix] || ' ')
 
       # Title
-      title = meta_tags[:title]
+      title = substitute_vars(meta_tags[:title], @meta_vars)
       if meta_tags[:lowercase] === true and !title.blank?
         title = [*title].map { |t| t.downcase }
       end
@@ -189,11 +204,12 @@ module MetaTags
       end
 
       # description
-      description = normalize_description(meta_tags[:description], separator)
+      description = substitute_vars(normalize_description(meta_tags[:description], separator), @meta_vars)
       result << tag(:meta, :name => :description, :content => description) unless description.blank?
 
       # keywords
-      keywords = normalize_keywords(meta_tags[:keywords])
+      keywords = substitute_vars(normalize_keywords(meta_tags[:keywords]), @meta_vars)
+      keywords = keywords.join(',') if keywords.is_a?(Array)
       result << tag(:meta, :name => :keywords, :content => keywords) unless keywords.blank?
 
       # noindex & nofollow
@@ -231,5 +247,64 @@ module MetaTags
         keywords = keywords.flatten.join(', ') if Array === keywords
         strip_tags(keywords).mb_chars.downcase
       end
+
+      def get_appropiate_translation(translation)
+        return translation if translation.is_a?(String)
+        ret = {:value => nil, :count => nil}
+        translation.each do |key, value|
+          match = get_replaces(value)
+          notsetted = match.reject do |m| @meta_vars.include? m.to_sym end
+          if(notsetted.length == 0 && (ret[:count] == nil || ret[:count] < match.length))
+            ret = {:value => value, :count => match.length}
+          end
+        end
+        raise "Metas no seteados" if !ret[:value]
+        ret[:value]
+      end
+
+      def get_replaces(str)
+        replaceRegex = /%\{([^\}]+)\}/i
+        str.scan(replaceRegex).flatten
+      end
+
+      # Given a string with replaces, and a hash with variables, returns a string with that variables replaced OR an array of strings if any of the replaced variables is an array.
+      # The array contains all the posible variatios of those values.
+      # Ex: substitute_vars("%{var1} - %{var2} - %{var3}", {:var1 => ["a","b"], :var2 => ["c","d"], :var3 => 'z'}) will return:
+      # ["a - c - z", "a - d - z", "b - c - z", "b - d - z"]
+      def substitute_vars(str, vars)
+        ret = []
+        replaces = get_replaces(str)
+
+        varsarray = vars.dup.delete_if do |key, value|
+          !replaces.include?(key.to_s) || !(value.is_a?(Array))
+        end
+
+        return str % vars if(varsarray.length == 0) # Si no hay arrays, se reemplaza normalmente
+
+        varsarray.each do |key, var|
+          if(replaces.include?(key.to_s))
+            var.each do |val|
+              copy = vars.dup
+              copy[key] = val
+              ret << substitute_vars(str, copy)
+            end
+          end
+        end
+        ret.flatten.uniq
+      end
+
+    def get_most_specific_metas(path)
+      metas = I18n.translate(path.join('.'))
+      if(metas.is_a?(Hash) && (metas[:title] || metas[:description] || metas[:keywords]))
+        return metas
+      else
+        path.pop
+        if(path.length == 0)
+          return I18n.translate('metas.defaults')
+        else
+          return get_most_specific_metas(path)
+        end
+      end
+    end
   end
 end

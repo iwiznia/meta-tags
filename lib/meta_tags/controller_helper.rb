@@ -13,6 +13,7 @@ module MetaTags
     def self.included(base)
       base.send :include, InstanceMethods
       base.alias_method_chain :render, :meta_tags
+      #base.send :before_filter, :set_metas
     end
 
     module InstanceMethods
@@ -38,12 +39,22 @@ module MetaTags
       end
 
       def append_meta_tags(meta_tags = {})
+        die!
         @meta_tags ||= {}
         meta_tags.each do |tag, value|
           @meta_tags[tag] ||= []
 
           @meta_tags[tag] = [@meta_tags[tag]] if(@meta_tags[tag].is_a?(String))
           @meta_tags[tag] += [*value]
+        end
+      end
+
+      def set_meta_vars(vars = {}, append = true)
+        @meta_vars ||= {}
+        if append
+          @meta_vars.merge!(vars)
+        else
+          @meta_vars = vars
         end
       end
 
