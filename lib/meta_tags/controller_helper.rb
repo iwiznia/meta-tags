@@ -39,7 +39,6 @@ module MetaTags
       end
 
       def append_meta_tags(meta_tags = {})
-        die!
         @meta_tags ||= {}
         meta_tags.each do |tag, value|
           @meta_tags[tag] ||= []

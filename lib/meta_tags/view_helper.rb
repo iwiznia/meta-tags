@@ -114,8 +114,13 @@ module MetaTags
     # @see #display_meta_tags
     #
     def noindex(noindex, append = false)
-      set_meta_tags({:noindex => (Boolean === noindex ? 'robots' : noindex)}, append)
-      noindex
+      noindex = [*noindex]
+      ap = append
+      noindex.each do |name|
+        set_meta_tags({:noindex => (name.class == String ? name : 'robots')}, ap)
+        ap = true
+      end
+       noindex
     end
 
     # Set the nofollow meta tag
@@ -130,7 +135,12 @@ module MetaTags
     # @see #display_meta_tags
     #
     def nofollow(nofollow, append = false)
-      set_meta_tags({:nofollow => (Boolean === nofollow ? 'robots' : nofollow)}, append)
+      nofollow = [*nofollow]
+      ap = append
+      nofollow.each do |name|
+        set_meta_tags({:nofollow => (name.class == String ? name : 'robots')}, ap)
+        ap = true
+      end
       nofollow
     end
 
@@ -144,6 +154,8 @@ module MetaTags
       title(get_appropiate_translation(metas[:title]), @meta_vars) if !@meta_tags[:title]
       description(get_appropiate_translation(metas[:description]), @meta_vars) if !@meta_tags[:description]
       keywords(get_appropiate_translation(metas[:keywords]), @meta_vars) if !@meta_tags[:keywords]
+      noindex(metas[:noindex]) if !@meta_tags[:noindex] && metas[:noindex]
+      nofollow(metas[:nofollow]) if !@meta_tags[:nofollow] && metas[:nofollow]
     end
 
 
