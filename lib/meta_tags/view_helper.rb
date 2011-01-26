@@ -217,12 +217,12 @@ module MetaTags
 
       # description
       description = substitute_vars(normalize_description(meta_tags[:description], separator), @meta_vars)
-      result << tag(:meta, :name => :description, :content => description) unless description.blank?
+      result << tag(:meta, :name => :description, :content => normalize_description(description)) unless description.blank?
 
       # keywords
       keywords = substitute_vars(normalize_keywords(meta_tags[:keywords]), @meta_vars)
       keywords = keywords.join(',') if keywords.is_a?(Array)
-      result << tag(:meta, :name => :keywords, :content => keywords) unless keywords.blank?
+      result << tag(:meta, :name => :keywords, :content => normalize_keywords(keywords)) unless keywords.blank?
 
       # noindex & nofollow
       meta_tags[:noindex] = [*meta_tags[:noindex]].compact
@@ -257,7 +257,7 @@ module MetaTags
       def normalize_keywords(keywords)
         return '' unless keywords
         keywords = keywords.flatten.join(', ') if Array === keywords
-        truncate(strip_tags(keywords).mb_chars.downcase, :length => 200)
+        strip_tags(keywords).mb_chars.downcase
       end
 
       def get_appropiate_translation(translation)
