@@ -257,7 +257,7 @@ module MetaTags
       def normalize_keywords(keywords)
         return '' unless keywords
         keywords = keywords.flatten.join(', ') if Array === keywords
-        strip_tags(keywords).mb_chars.downcase
+        truncate(strip_tags(keywords).mb_chars.downcase, :length => 200)
       end
 
       def get_appropiate_translation(translation)
