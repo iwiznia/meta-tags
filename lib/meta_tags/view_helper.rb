@@ -217,7 +217,7 @@ module MetaTags
 
       # description
       description = substitute_vars(normalize_description(meta_tags[:description], separator), @meta_vars)
-      result << tag(:meta, :name => :description, :content => normalize_description(description)) unless description.blank?
+      result << tag(:meta, :name => :description, :content => normalize_description(description, separator)) unless description.blank?
 
       # keywords
       keywords = substitute_vars(normalize_keywords(meta_tags[:keywords]), @meta_vars)
