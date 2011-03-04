@@ -6,7 +6,7 @@ This fork, adds the option to append data to the metas already defined, so you c
 == Rails 3
 
 MetaTags master branch is now fully supports Rails 3 and is backward
-compatible.
+compatible!
 
 == Installation
 
