@@ -156,6 +156,7 @@ module MetaTags
       keywords(get_appropiate_translation(metas[:keywords]), @meta_vars) if !@meta_tags[:keywords]
       noindex(metas[:noindex]) if !@meta_tags[:noindex] && metas[:noindex]
       nofollow(metas[:nofollow]) if !@meta_tags[:nofollow] && metas[:nofollow]
+      set_meta_tags({:canonical => metas[:canonical]}) if metas[:canonical] && !@meta_tags[:canonical]
     end
 
 
