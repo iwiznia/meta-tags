@@ -208,12 +208,12 @@ module MetaTags
 
       # title
       if title.blank?
-        result << content_tag(:title, meta_tags[:site])
+        result << content_tag(:title, meta_tags[:site].strip)
       else
         title = normalize_title(title).unshift(meta_tags[:site])
         title.reverse! if meta_tags[:reverse] === true
         sep = prefix + separator + suffix
-        result << content_tag(:title, title.join(sep))
+        result << content_tag(:title, title.join(sep).strip)
       end
 
       # description
