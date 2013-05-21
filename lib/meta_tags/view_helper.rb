@@ -292,7 +292,7 @@ module MetaTags
           !replaces.include?(key.to_s) || !(value.is_a?(Array))
         end
 
-        return str % vars if(varsarray.length == 0) # Si no hay arrays, se reemplaza normalmente
+        return String.new(str) % vars if(varsarray.length == 0) # Si no hay arrays, se reemplaza normalmente
 
         varsarray.each do |key, var|
           if(replaces.include?(key.to_s))
